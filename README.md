@@ -1,44 +1,19 @@
-# DIY Photobooth V4 — Template System + Upload
+# DIY Photobooth — V5
 
-A zero-cost, client-side photobooth web app.
+A free, client-side photobooth with a template-driven camera and upload system.
 
-## Features
+## V5: Per-slot photo sources
 
-- Mobile + PC responsive UI
-- Browser camera access
-- Front/back camera switching where supported
-- 1/3/5 second countdown
-- 3 or 4 photos
-- Automatic photobooth strip composition
-- PNG download
-- No backend
-- No photo uploads
-- No paid API
-- No external JavaScript dependencies
+Each template slot can independently use:
+- Camera — captures the live frame using that slot's exact aspect ratio.
+- Upload — selects a local image and fits/crops it into the slot without stretching.
 
-## Run locally
+You can mix sources in the same strip, for example:
+- Photo 1 → Camera
+- Photo 2 → Upload
+- Photo 3 → Camera
 
-For the best camera experience, serve the folder over localhost rather than opening index.html directly.
+The existing Upload All button remains available as a quick all-upload workflow.
 
-If Python is installed:
-
-    python -m http.server 8000
-
-Then open:
-
-    http://localhost:8000
-
-## Free publishing
-
-The project can be uploaded to your own GitHub repository and published with GitHub Pages.
-
-Camera access on the public site requires HTTPS, which GitHub Pages provides.
-
-## Ownership
-
-All application code in this project is provided as the source project for you to edit and host yourself.
-
-
-## Upload photos
-
-Use **Upload Photos** to select exactly the number of images required by the active template. Uploaded images are processed entirely in the browser and cropped to each slot's aspect ratio without stretching.
+## Privacy
+Everything runs locally in the browser. No backend, account, server upload, or paid API is required.
