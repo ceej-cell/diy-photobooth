@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#111111">
-  <title>DIY Photobooth — V2</title>
+  <title>DIY Photobooth — V4</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,7 +14,7 @@
         <div class="eyebrow">DIY PHOTOBOOTH</div>
         <h1>Snap. Strip. Share.</h1>
       </div>
-      <span class="badge">V2</span>
+      <span class="badge">V4</span>
     </header>
 
     <section class="booth">
@@ -38,7 +38,11 @@
           <button id="switchCamera" class="icon-btn" type="button" title="Switch camera" disabled>↔</button>
         </div>
 
-        <button id="startBtn" class="primary" type="button">Start Camera</button>
+        <div class="action-row">
+          <button id="startBtn" class="primary" type="button">Start Camera</button>
+          <button id="uploadBtn" class="secondary" type="button">Upload Photos</button>
+        </div>
+        <input id="uploadInput" type="file" accept="image/*" multiple hidden>
 
         <div class="settings">
           <label>
@@ -85,7 +89,7 @@
       <div class="result-actions">
         <button id="downloadBtn" class="primary" type="button">Download PNG</button>
       </div>
-      <p class="privacy">Your photos are processed on this device. Nothing is uploaded.</p>
+      <p class="privacy">Your photos are processed on this device. Nothing is uploaded to a server.</p>
     </section>
 
     <footer>Built DIY • No account • No server • No paid API</footer>

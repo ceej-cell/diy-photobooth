@@ -2,6 +2,8 @@ const video = document.getElementById("video");
 const canvas = document.getElementById("captureCanvas");
 const ctx = canvas.getContext("2d");
 const startBtn = document.getElementById("startBtn");
+const uploadBtn = document.getElementById("uploadBtn");
+const uploadInput = document.getElementById("uploadInput");
 const switchCameraBtn = document.getElementById("switchCamera");
 const statusEl = document.getElementById("status");
 const countdownEl = document.getElementById("countdown");
@@ -301,6 +303,81 @@ function loadImage(src) {
   });
 }
 
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error(`Couldn't read ${file.name}.`));
+    reader.readAsDataURL(file);
+  });
+}
+
+
+async function buildStripFromFiles(files) {
+  const layout = getLayout();
+  if (files.length !== layout.slots.length) {
+    throw new Error(`This template needs exactly ${layout.slots.length} photos.`);
+  }
+
+  const images = await Promise.all(Array.from(files).map(fileToDataUrl));
+  return buildStrip(images);
+}
+
+async function uploadPhotos() {
+  const layout = getLayout();
+  uploadInput.value = "";
+  uploadInput.multiple = true;
+  uploadInput.click();
+}
+
+async function handleUploadedPhotos(event) {
+  const files = Array.from(event.target.files || []);
+  if (!files.length) return;
+
+  const layout = getLayout();
+  const count = layout.slots.length;
+
+  if (files.length !== count) {
+    setStatus(`Please select exactly ${count} photos for ${activeTemplate.name}.`);
+    return;
+  }
+
+  const invalid = files.find(file => !file.type.startsWith("image/"));
+  if (invalid) {
+    setStatus("Please choose image files only.");
+    return;
+  }
+
+  startBtn.disabled = true;
+  uploadBtn.disabled = true;
+  switchCameraBtn.disabled = true;
+  templateSelect.disabled = true;
+  photoCountEl.disabled = true;
+  delayEl.disabled = true;
+
+  try {
+    setStatus(`Processing ${count} uploaded photos…`);
+    const dataUrl = await buildStripFromFiles(files);
+
+    if (lastResultUrl) URL.revokeObjectURL(lastResultUrl);
+    lastResultUrl = dataUrl;
+    resultImage.src = dataUrl;
+    resultSection.classList.remove("hidden");
+    resultSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    setStatus("Upload complete!");
+  } catch (error) {
+    console.error(error);
+    setStatus(error.message || "Couldn't build the strip.");
+  } finally {
+    startBtn.disabled = false;
+    uploadBtn.disabled = false;
+    switchCameraBtn.disabled = !stream;
+    templateSelect.disabled = false;
+    photoCountEl.disabled = false;
+    delayEl.disabled = false;
+  }
+}
+
 function drawImageCover(ctx, img, slot) {
   const sourceWidth = img.naturalWidth || img.width;
   const sourceHeight = img.naturalHeight || img.height;
@@ -372,6 +449,7 @@ async function takePhotos() {
   const shots = [];
 
   startBtn.disabled = true;
+  uploadBtn.disabled = true;
   switchCameraBtn.disabled = true;
   templateSelect.disabled = true;
   photoCountEl.disabled = true;
@@ -403,6 +481,7 @@ async function takePhotos() {
     setStatus("Something went wrong. Please try again.");
   } finally {
     startBtn.disabled = false;
+    uploadBtn.disabled = false;
     switchCameraBtn.disabled = false;
     templateSelect.disabled = false;
     photoCountEl.disabled = false;
@@ -437,6 +516,9 @@ switchCameraBtn.addEventListener("click", async () => {
   facingMode = facingMode === "user" ? "environment" : "user";
   await startCamera();
 });
+
+uploadBtn.addEventListener("click", uploadPhotos);
+uploadInput.addEventListener("change", handleUploadedPhotos);
 
 startBtn.addEventListener("click", async () => {
   if (!stream) {

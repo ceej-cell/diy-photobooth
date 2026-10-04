@@ -136,6 +136,12 @@ video {
 
 .primary:active, .secondary:active, .icon-btn:active { transform: scale(.98); }
 
+.action-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
 .primary {
   border: 0;
   background: var(--accent);
@@ -280,6 +286,8 @@ footer {
   .controls { border-radius: 20px; }
 
   .primary, .secondary, .icon-btn, select { min-height: 52px; }
+
+  .action-row { grid-template-columns: 1fr; }
 
   .settings { gap: 8px; }
 

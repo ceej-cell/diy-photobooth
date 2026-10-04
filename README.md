@@ -1,4 +1,4 @@
-# DIY Photobooth V3 — Template System
+# DIY Photobooth V4 — Template System + Upload
 
 A zero-cost, client-side photobooth web app.
 
@@ -37,3 +37,8 @@ Camera access on the public site requires HTTPS, which GitHub Pages provides.
 ## Ownership
 
 All application code in this project is provided as the source project for you to edit and host yourself.
+
+
+## Upload photos
+
+Use **Upload Photos** to select exactly the number of images required by the active template. Uploaded images are processed entirely in the browser and cropped to each slot's aspect ratio without stretching.
