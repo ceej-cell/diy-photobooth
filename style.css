@@ -185,6 +185,21 @@ select {
   pointer-events: none;
 }
 
+.shot-guide {
+  position: absolute;
+  left: 14px;
+  top: 14px;
+  z-index: 3;
+  padding: 7px 10px;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 999px;
+  background: rgba(0,0,0,.48);
+  color: rgba(255,255,255,.9);
+  font-size: 11px;
+  font-weight: 700;
+  backdrop-filter: blur(8px);
+}
+
 .flash {
   position: absolute;
   inset: 0;
@@ -258,7 +273,7 @@ footer {
   .booth { grid-template-columns: 1fr; }
 
   .camera-card {
-    aspect-ratio: 3 / 4;
+    aspect-ratio: 4 / 3;
     border-radius: 20px;
   }
 

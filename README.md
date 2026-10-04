@@ -1,4 +1,4 @@
-# DIY Photobooth V1
+# DIY Photobooth V3 — Template System
 
 A zero-cost, client-side photobooth web app.
 
