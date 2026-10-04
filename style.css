@@ -274,3 +274,7 @@ footer {
 @media (min-width: 761px) {
   .camera-card { max-height: 690px; }
 }
+
+/* The camera box gets its aspect ratio from the selected strip template. */
+.camera-card { transition: aspect-ratio .2s ease; }
+video { object-position: center center; }

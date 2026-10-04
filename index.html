@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#111111">
-  <title>DIY Photobooth — V1</title>
+  <title>DIY Photobooth — V2</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,7 +14,7 @@
         <div class="eyebrow">DIY PHOTOBOOTH</div>
         <h1>Snap. Strip. Share.</h1>
       </div>
-      <span class="badge">V1</span>
+      <span class="badge">V2</span>
     </header>
 
     <section class="booth">
@@ -40,6 +40,14 @@
         <button id="startBtn" class="primary" type="button">Start Camera</button>
 
         <div class="settings">
+          <label>
+            Template
+            <select id="templateSelect">
+              <option value="classic" selected>Classic 4:3</option>
+              <option value="square">Square 1:1</option>
+              <option value="portrait">Portrait 3:4</option>
+            </select>
+          </label>
           <label>
             Photos
             <select id="photoCount">

@@ -11,15 +11,47 @@ const resultSection = document.getElementById("resultSection");
 const resultImage = document.getElementById("resultImage");
 const downloadBtn = document.getElementById("downloadBtn");
 const retakeBtn = document.getElementById("retakeBtn");
+const templateSelect = document.getElementById("templateSelect");
 const photoCountEl = document.getElementById("photoCount");
 const delayEl = document.getElementById("delay");
+const cameraCard = document.querySelector(".camera-card");
+
+// The template is the source of truth for the camera framing.
+// Add new templates here later without rewriting the camera system.
+const TEMPLATES = {
+  classic: {
+    name: "Classic 4:3",
+    slot: { width: 780, height: 585 },
+    capture: { width: 1200, height: 900 }
+  },
+  square: {
+    name: "Square 1:1",
+    slot: { width: 780, height: 780 },
+    capture: { width: 1200, height: 1200 }
+  },
+  portrait: {
+    name: "Portrait 3:4",
+    slot: { width: 720, height: 960 },
+    capture: { width: 900, height: 1200 }
+  }
+};
 
 let stream = null;
 let facingMode = "user";
 let lastResultUrl = null;
+let activeTemplate = TEMPLATES[templateSelect.value];
 
 function setStatus(message) {
   statusEl.textContent = message;
+}
+
+function updateCameraFrame() {
+  const { width, height } = activeTemplate.slot;
+  cameraCard.style.aspectRatio = `${width} / ${height}`;
+}
+
+function getTemplate() {
+  return TEMPLATES[templateSelect.value] || TEMPLATES.classic;
 }
 
 async function startCamera() {
@@ -43,8 +75,8 @@ async function startCamera() {
     video.srcObject = stream;
     placeholder.classList.add("hidden");
     switchCameraBtn.disabled = false;
-    startBtn.textContent = "Start Photobooth";
-    setStatus("Camera ready");
+    startBtn.textContent = "Take Photos";
+    setStatus(`${activeTemplate.name} • Camera ready`);
   } catch (error) {
     console.error(error);
     setStatus(
@@ -74,22 +106,67 @@ async function countdown(seconds) {
   countdownEl.textContent = "";
 }
 
+function getCenteredCrop(sourceWidth, sourceHeight, targetRatio) {
+  const sourceRatio = sourceWidth / sourceHeight;
+
+  if (sourceRatio > targetRatio) {
+    // Source is wider: crop the left/right edges.
+    const cropWidth = sourceHeight * targetRatio;
+    return {
+      sx: (sourceWidth - cropWidth) / 2,
+      sy: 0,
+      sw: cropWidth,
+      sh: sourceHeight
+    };
+  }
+
+  // Source is taller: crop the top/bottom edges.
+  const cropHeight = sourceWidth / targetRatio;
+  return {
+    sx: 0,
+    sy: (sourceHeight - cropHeight) / 2,
+    sw: sourceWidth,
+    sh: cropHeight
+  };
+}
+
 function captureFrame() {
-  const w = video.videoWidth;
-  const h = video.videoHeight;
+  const sourceWidth = video.videoWidth;
+  const sourceHeight = video.videoHeight;
+  const targetWidth = activeTemplate.capture.width;
+  const targetHeight = activeTemplate.capture.height;
 
-  if (!w || !h) throw new Error("Camera frame isn't ready.");
+  if (!sourceWidth || !sourceHeight) {
+    throw new Error("Camera frame isn't ready.");
+  }
 
-  canvas.width = w;
-  canvas.height = h;
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
 
-  // Mirror selfie camera so the captured image matches the preview.
+  const crop = getCenteredCrop(
+    sourceWidth,
+    sourceHeight,
+    targetWidth / targetHeight
+  );
+
+  // Capture exactly the same aspect ratio the live camera displays.
+  // No stretching: only a centered crop when the camera's native ratio differs.
   ctx.save();
   if (facingMode === "user") {
-    ctx.translate(w, 0);
+    ctx.translate(targetWidth, 0);
     ctx.scale(-1, 1);
   }
-  ctx.drawImage(video, 0, 0, w, h);
+  ctx.drawImage(
+    video,
+    crop.sx,
+    crop.sy,
+    crop.sw,
+    crop.sh,
+    0,
+    0,
+    targetWidth,
+    targetHeight
+  );
   ctx.restore();
 
   flashEl.classList.remove("fire");
@@ -110,14 +187,19 @@ function loadImage(src) {
 
 async function buildStrip(images) {
   const loaded = await Promise.all(images.map(loadImage));
+  const { slot } = activeTemplate;
 
   const outputWidth = 900;
-  const photoWidth = 780;
-  const photoHeight = Math.round(photoWidth * 0.75);
   const top = 90;
   const gap = 30;
   const bottom = 120;
-  const outputHeight = top + loaded.length * photoHeight + (loaded.length - 1) * gap + bottom;
+  const photoWidth = slot.width;
+  const photoHeight = slot.height;
+  const outputHeight =
+    top +
+    loaded.length * photoHeight +
+    (loaded.length - 1) * gap +
+    bottom;
 
   const out = document.createElement("canvas");
   out.width = outputWidth;
@@ -127,7 +209,6 @@ async function buildStrip(images) {
   c.fillStyle = "#ffffff";
   c.fillRect(0, 0, outputWidth, outputHeight);
 
-  // Header
   c.fillStyle = "#111111";
   c.font = "800 34px system-ui, sans-serif";
   c.textAlign = "center";
@@ -136,6 +217,9 @@ async function buildStrip(images) {
   let y = top;
   for (const img of loaded) {
     const x = (outputWidth - photoWidth) / 2;
+
+    // Captured images already have the template's exact aspect ratio,
+    // so this placement cannot warp the image.
     c.drawImage(img, x, y, photoWidth, photoHeight);
     y += photoHeight + gap;
   }
@@ -155,6 +239,7 @@ async function takePhotos() {
 
   startBtn.disabled = true;
   switchCameraBtn.disabled = true;
+  templateSelect.disabled = true;
   photoCountEl.disabled = true;
   delayEl.disabled = true;
 
@@ -164,7 +249,7 @@ async function takePhotos() {
 
   try {
     for (let i = 0; i < count; i++) {
-      setStatus(`Photo ${i + 1} of ${count}`);
+      setStatus(`Photo ${i + 1} of ${count} • ${activeTemplate.name}`);
       await countdown(delay);
       shots.push(captureFrame());
       await wait(450);
@@ -186,11 +271,24 @@ async function takePhotos() {
   } finally {
     startBtn.disabled = false;
     switchCameraBtn.disabled = false;
+    templateSelect.disabled = false;
     photoCountEl.disabled = false;
     delayEl.disabled = false;
     startBtn.textContent = "Take Photos";
   }
 }
+
+templateSelect.addEventListener("change", async () => {
+  activeTemplate = getTemplate();
+  updateCameraFrame();
+
+  if (stream) {
+    setStatus(`${activeTemplate.name} • Restarting camera…`);
+    await startCamera();
+  } else {
+    setStatus(`${activeTemplate.name} • Camera not started`);
+  }
+});
 
 switchCameraBtn.addEventListener("click", async () => {
   facingMode = facingMode === "user" ? "environment" : "user";
@@ -200,7 +298,6 @@ switchCameraBtn.addEventListener("click", async () => {
 startBtn.addEventListener("click", async () => {
   if (!stream) {
     await startCamera();
-    if (stream) startBtn.textContent = "Take Photos";
     return;
   }
   await takePhotos();
@@ -222,4 +319,5 @@ downloadBtn.addEventListener("click", () => {
   a.remove();
 });
 
+updateCameraFrame();
 window.addEventListener("beforeunload", stopCamera);
